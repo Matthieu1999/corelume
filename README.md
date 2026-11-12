@@ -50,15 +50,25 @@ It replaces the old version and keeps your settings.
 
 ## Resource use
 
-Measured with version 1.0.0, one reading per second. Memory counts Corelume and its
-display processes (WebView2). Processor is the share of the whole processor.
+Measured with version 1.0.0. Memory counts Corelume and the Microsoft Edge WebView2
+processes that draw its window and widgets (Task Manager can list them apart from
+Corelume, under **WebView2 Manager**). Processor is the share of the whole processor.
 
-| Corelume is…                                   | Memory | Processor |
-| ---------------------------------------------- | -----: | --------: |
-| open                                           | 255 MB |    0.05 % |
-| minimised                                      | 248 MB |    0.04 % |
-| closed, only its icon next to the clock        |  37 MB |  < 0.01 % |
-| closed, with all 5 widgets on the desktop      | 329 MB |    0.08 % |
+| Corelume is…                              | Task Manager shows | Memory reserved | Processor |
+| ----------------------------------------- | -----------------: | --------------: | --------: |
+| open                                      |             129 MB |          247 MB |    0.05 % |
+| minimised                                 |             125 MB |          250 MB |    0.04 % |
+| closed, only its icon next to the clock   |              28 MB |           38 MB |  < 0.01 % |
+| open, with the 5 widgets on the desktop   |             228 MB |          403 MB |    0.15 % |
+| closed, with the 5 widgets on the desktop |             194 MB |          336 MB |    0.06 % |
+
+- **Task Manager shows** the memory in use right now, as in its Memory column.
+- **Memory reserved** is all the memory these processes have set aside, including the
+  parts Windows has compressed or moved to disk while they are not needed.
+
+Each figure is an average over 30 seconds, taken 20 seconds after the change. Windows
+keeps shrinking the memory of an app left idle, so Task Manager's figures go down further
+over time: with the 5 widgets and the window closed, about 145 MB after a while.
 
 Corelume reads your PC's sensors locally and sends nothing over the network.
 
