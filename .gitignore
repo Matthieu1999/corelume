@@ -1,0 +1,22 @@
+# Build output: Cargo targets (app and spikes) and Tauri's generated capability schemas
+target/
+src-tauri/gen/schemas/
+
+# Working notes and spike measurements: data about the developer's PC, not project files
+PLAN.md
+spikes/**/*.txt
+
+# Secrets: code-signing certificates, updater keys, environment files
+*.pfx
+*.p12
+*.pem
+*.key
+.env
+.env.*
+
+# Editors and Windows
+.vscode/
+.idea/
+*.log
+Thumbs.db
+desktop.ini

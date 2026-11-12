@@ -1,0 +1,381 @@
+/* Corelume — "Night instrument". Neutral graphite chrome, one blue accent for every
+   measurement; warm colour appears only when a temperature needs attention.
+   Dark is the base; light is its own set of steps (validated against white), chosen by
+   <html data-theme>, which the scripts set from the setting or the system. */
+:root {
+  color-scheme: dark;
+  --page: #0c0e11;
+  --surface: #14171b;
+  --surface-2: #1a1e23;
+  --border: rgba(255, 255, 255, 0.07);
+  --grid: #22262c;
+  --axis: #30353c;
+  --ink-1: #eef1f4;
+  --ink-2: #a8b0ba;
+  --ink-3: #7f8792;
+  --accent: #3987e5;
+  --accent-track: rgba(57, 135, 229, 0.16);
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --hover: rgba(255, 255, 255, 0.05);
+  --chip: rgba(255, 255, 255, 0.06);
+  --row-line: rgba(255, 255, 255, 0.04);
+  --control: #2a3038;
+  --knob: #c9d1da;
+  --seg-on: #2a3038;
+  --tip: #23282f;
+  --shadow: rgba(0, 0, 0, 0.35);
+  --widget-bg: rgba(20, 23, 27, 0.88);
+  --widget-hover: rgba(255, 255, 255, 0.14);
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "SF Pro Text", sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "SF Pro Display", sans-serif;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page: #eef0f3;
+  --surface: #ffffff;
+  --surface-2: #f3f5f7;
+  --border: rgba(15, 23, 42, 0.1);
+  --grid: #e7eaee;
+  --axis: #cbd1d8;
+  --ink-1: #111418;
+  --ink-2: #4a5360;
+  --ink-3: #69727e;
+  --accent: #2f6fd6;
+  --accent-track: rgba(47, 111, 214, 0.14);
+  --warning: #c27c0e;
+  --serious: #c2410c;
+  --critical: #991b1b;
+  --hover: rgba(15, 23, 42, 0.05);
+  --chip: rgba(15, 23, 42, 0.06);
+  --row-line: rgba(15, 23, 42, 0.06);
+  --control: #d5dae0;
+  --knob: #ffffff;
+  --seg-on: #ffffff;
+  --tip: #ffffff;
+  --shadow: rgba(15, 23, 42, 0.18);
+  --widget-bg: rgba(255, 255, 255, 0.92);
+  --widget-hover: rgba(15, 23, 42, 0.2);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+/* Lists rebuilt every second must never scroll the view on their own. */
+html { overflow-anchor: none; }
+body {
+  background: var(--page);
+  color: var(--ink-1);
+  font: 13px/1.4 var(--font);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Header */
+.top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px 12px;
+}
+.brand { display: flex; align-items: center; gap: 8px; font: 600 14px/1 var(--font-display); letter-spacing: 0.01em; }
+.logo { width: 20px; height: 20px; fill: none; stroke: var(--accent); stroke-width: 2.6; stroke-linecap: round; }
+.logo circle { fill: var(--accent); stroke: none; }
+
+/* Page tabs; they scroll sideways on a narrow side screen. */
+.tabs { flex: 1; display: flex; align-items: center; gap: 2px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.tabs a {
+  padding: 6px 10px;
+  border-radius: 7px;
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tabs a:hover { color: var(--ink-1); background: var(--hover); }
+.tabs a[aria-current="page"] { color: var(--ink-1); background: var(--surface-2); box-shadow: inset 0 -2px 0 var(--accent); }
+.tabs a:focus-visible, .card-head h2 a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.settings-tab { margin-left: auto; display: flex; }
+.settings-tab svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.live { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 12px; white-space: nowrap; }
+.live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+/* Layout: the overview fills the window height (its rows share any spare height, and inside
+   each card the chart takes it); detail pages stack cards with fixed-height charts. */
+body { display: flex; flex-direction: column; }
+main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.page { flex: 1; }
+.page[hidden] { display: none !important; }
+.grid, .detail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+/* Overview: CPU, disks and network take half the width, GPU and memory a quarter. */
+.grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid .cpu, .grid .disks, .grid .net, .span-2 { grid-column: span 2; }
+.detail { align-content: start; }
+.rows-2 { grid-row: span 2; }
+.span-all { grid-column: 1 / -1; }
+.detail .chart { flex: none; height: 150px; }
+
+.card {
+  container-type: inline-size;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.card-head { display: flex; align-items: baseline; gap: 8px; }
+.card-head h2, .card > h2 { margin: 0; font: 600 13px/1.2 var(--font-display); color: var(--ink-1); }
+.card-head h2 a { color: inherit; text-decoration: none; }
+.card-head h2 a::after { content: " ›"; color: var(--ink-3); }
+.card-head h2 a:hover { color: var(--accent); }
+.card h3 { margin: 0; font: 600 12px/1.2 var(--font-display); color: var(--ink-2); }
+.card-head .sub { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Figures. Live values use tabular digits so they do not jitter as they change every second. */
+.figures { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.fig { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.label { color: var(--ink-3); font-size: 12px; }
+.value { display: flex; align-items: baseline; gap: 3px; white-space: nowrap; }
+.value b { font: 600 26px/1.1 var(--font-display); font-variant-numeric: tabular-nums; color: var(--ink-1); }
+.value i { font-style: normal; color: var(--ink-2); font-size: 13px; }
+
+/* Temperature state: icon carries the colour, the label stays in ink. */
+.state {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 8px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--ink-1);
+  font-size: 11px;
+}
+.state[hidden] { display: none; }
+.state::before { content: ""; width: 9px; height: 8px; background: var(--c); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+/* Held at a power limit: normal operation, so a neutral "ceiling" bar instead of a warning. */
+.state.limit::before { clip-path: none; width: 8px; height: 2px; border-radius: 1px; background: var(--ink-2); }
+.warning { --c: var(--warning); }
+.serious { --c: var(--serious); }
+.critical { --c: var(--critical); }
+
+/* Charts are canvases sized by CSS; the script matches their pixel buffer to this box.
+   Zero basis plus a minimum: the size never follows the pixel buffer, so it cannot grow by itself. */
+.chart { display: block; width: 100%; height: 0; flex: 1 1 0; min-height: 96px; }
+.chart.tall { min-height: 128px; }
+
+/* Per-core grid: one column per thread (set by the script), tiles span their thread count. */
+.cores { display: grid; grid-template-columns: repeat(var(--cols, 16), minmax(0, 1fr)); gap: 6px; }
+.group-label { grid-column: 1 / -1; color: var(--ink-3); font-size: 11px; margin-top: 4px; }
+.group-label:first-child { margin-top: 0; }
+
+.note { margin: -4px 0 0; color: var(--ink-3); font-size: 12px; }
+.note[hidden] { display: none; }
+/* No GPU source: keep the card and its message, drop the empty chart and meters. */
+.card.unavailable .chart, .card.unavailable .meter-row, .card.unavailable .stats { display: none; }
+/* Tile, top to bottom: temperature, one load bar per thread, core name. */
+.core {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 5px 5px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.bars { display: flex; gap: 3px; height: 30px; align-self: stretch; }
+.bar { flex: 1; position: relative; background: var(--accent-track); border-radius: 3px; }
+.bar i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--accent); border-radius: 3px 3px 0 0; }
+.core .n { color: var(--ink-3); font-size: 10px; line-height: 1; }
+.core .t { color: var(--ink-2); font-size: 12px; line-height: 1.1; display: inline-flex; align-items: center; gap: 3px; }
+.core .t.warning, .core .t.serious, .core .t.critical { color: var(--ink-1); }
+.core .t.warning::before, .core .t.serious::before, .core .t.critical::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c);
+}
+
+/* Meters and small stats */
+.meter-row { display: flex; flex-direction: column; gap: 6px; }
+.meter-label { display: flex; justify-content: space-between; color: var(--ink-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.meter-label b { color: var(--ink-1); font-weight: 600; }
+.meter { height: 6px; border-radius: 3px; background: var(--accent-track); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 3px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.stats div { background: var(--surface-2); border-radius: 8px; padding: 7px 10px; }
+.stats dt { color: var(--ink-3); font-size: 11px; }
+.stats dd { margin: 0; color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stats dd b { color: var(--ink-1); font-weight: 600; font-size: 14px; }
+
+.net-cols { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+@container (max-width: 420px) { .net-cols { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
+/* Two drives per row when the card is wide enough, so three or four drives stay compact. */
+.drive-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 20px; }
+.drive-list .meter-label span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 8px; }
+.drive-list .meter-label span:last-child { white-space: nowrap; }
+
+/* Tables and spec lists on detail pages */
+.table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.table th { color: var(--ink-3); font-weight: 500; text-align: left; padding: 0 8px 6px 0; border-bottom: 1px solid var(--border); }
+.table td { color: var(--ink-2); padding: 5px 8px 5px 0; border-bottom: 1px solid var(--row-line); white-space: nowrap; }
+.table td:first-child { color: var(--ink-1); }
+.table td small { color: var(--ink-3); }
+.table .num { text-align: right; padding-right: 0; }
+.mini { display: inline-block; width: 64px; height: 6px; border-radius: 3px; background: var(--accent-track); vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.mini i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 3px; }
+.num-inline { display: inline-block; min-width: 3.2em; }
+.specs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; font-size: 12px; }
+.specs dt { color: var(--ink-3); }
+.specs dd { margin: 0; color: var(--ink-1); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.hint { margin: 0; color: var(--ink-3); font-size: 12px; }
+
+/* Memory breakdown: label and explanation, size and share, a bar on the installed total. */
+.usage { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(60px, 140px); gap: 8px 16px; align-items: center; }
+.usage .group { grid-column: 1 / -1; display: flex; justify-content: space-between; margin-top: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); color: var(--ink-2); font-weight: 600; font-size: 12px; }
+.usage .group:first-child { margin-top: 0; }
+.usage .what b { display: block; color: var(--ink-1); font-weight: 500; }
+.usage .what small { display: block; color: var(--ink-3); font-size: 11px; }
+.usage .size { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.usage .size b { color: var(--ink-1); font-weight: 600; }
+.usage .size small { color: var(--ink-3); }
+/* Memory Windows can hand out right away is not "used": a neutral bar, not the accent. */
+.meter.idle { background: var(--control); }
+.meter.idle i { background: var(--ink-3); }
+
+/* Settings */
+.settings { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 16px; max-width: 720px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+.row b { display: block; font-weight: 500; color: var(--ink-1); }
+.row small { display: block; margin-top: 2px; color: var(--ink-3); font-size: 12px; }
+input.switch {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--control);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+input.switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--knob);
+  box-shadow: 0 1px 2px var(--shadow);
+  transition: transform 0.15s;
+}
+input.switch:checked { background: var(--accent); }
+input.switch:checked::before { transform: translateX(16px); background: #fff; }
+input.switch:disabled { opacity: 0.45; cursor: default; }
+input.switch:focus-visible, .segmented input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+select {
+  min-width: 0;
+  max-width: 60%;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--ink-1);
+  font: inherit;
+}
+select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row[hidden] { display: none; }
+.segmented { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--surface-2); }
+.segmented label { position: relative; }
+.segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented span { display: block; padding: 4px 12px; border-radius: 6px; color: var(--ink-2); cursor: pointer; }
+.segmented input:checked + span { background: var(--seg-on); color: var(--ink-1); box-shadow: 0 1px 2px var(--shadow); }
+
+/* Widget position: the main screen as a 5 × 5 grid of choices. */
+.screen-grid {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 3px;
+  width: 168px;
+  aspect-ratio: 16 / 9;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.screen-grid label { position: relative; display: block; }
+.screen-grid input { position: absolute; opacity: 0; pointer-events: none; }
+.screen-grid span { display: block; height: 100%; border-radius: 2px; background: var(--control); cursor: pointer; }
+.screen-grid label:hover span { background: var(--ink-3); }
+.screen-grid input:checked + span { background: var(--accent); }
+.screen-grid input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+.net-cols > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.total { margin: 0; color: var(--ink-3); font-size: 12px; }
+.total b { color: var(--ink-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Hover tooltip */
+.tip {
+  position: fixed;
+  pointer-events: none;
+  background: var(--tip);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 4px 16px var(--shadow);
+}
+.tip b { color: var(--ink-1); font-weight: 600; }
+
+/* Side-screen widths: two columns, then one. */
+@media (max-width: 940px) {
+  .grid, .detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .live { display: none; }
+}
+@media (max-width: 620px) {
+  .top { padding: 12px 16px 10px; }
+  .grid, .detail { grid-template-columns: minmax(0, 1fr); }
+  .grid .cpu, .grid .disks, .grid .net, .span-2 { grid-column: auto; }
+  .rows-2 { grid-row: auto; }
+  .net-cols { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .figures { gap: 8px 20px; }
+}
+
+/* Desktop widgets: a transparent window holding one translucent card. */
+html.widget-page, html.widget-page body { height: 100%; min-height: 0; overflow: hidden; background: transparent; }
+html.widget-page body { display: block; }
+.widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px 9px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--widget-bg);
+  cursor: pointer;
+  user-select: none;
+}
+.widget:hover { border-color: var(--widget-hover); }
+.widget:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.w-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; }
+.w-title { color: var(--ink-3); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.w-side { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.w-side.hot { color: var(--ink-1); }
+.w-side.hot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.widget .value b { font-size: 24px; }
+.w-chart { flex: 1; min-height: 0; width: 100%; display: block; }
+.w-foot { color: var(--ink-3); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" class="widget-page">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corelume widget</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="common.js" defer></script>
+  <script src="widget.js" defer></script>
+</head>
+<body>
+  <!-- A click opens the component's page; the position comes from Settings. -->
+  <div class="widget" id="widget" role="button" tabindex="0">
+    <div class="w-head"><span class="w-title" id="w-title"></span><span class="w-side" id="w-side"></span></div>
+    <div class="value"><b id="w-main">–</b><i id="w-unit"></i></div>
+    <canvas class="w-chart" id="w-chart" aria-hidden="true"></canvas>
+    <div class="w-foot" id="w-foot"></div>
+  </div>
+</body>
+</html>

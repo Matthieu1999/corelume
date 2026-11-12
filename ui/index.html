@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corelume</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="common.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.3 17.3A7.5 7.5 0 1 1 17.3 6.7"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Corelume
+    </div>
+    <nav class="tabs" aria-label="Pages">
+      <a href="#overview">Overview</a>
+      <a href="#cpu">Processor</a>
+      <a href="#gpu">Graphics</a>
+      <a href="#memory">Memory</a>
+      <a href="#disks">Disks</a>
+      <a href="#network">Network</a>
+      <a href="#settings" class="settings-tab" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.5"/><circle cx="10" cy="17" r="2.5"/></svg>
+      </a>
+    </nav>
+    <div class="live"><span class="dot" aria-hidden="true"></span><span id="source">Starting</span></div>
+  </header>
+
+  <main>
+    <!-- Overview: every component at a glance; each title opens its page. -->
+    <section class="page grid" id="page-overview" aria-label="Overview">
+      <section class="card cpu">
+        <div class="card-head"><h2><a href="#cpu">Processor</a></h2><span class="sub" id="cpu-sub"></span></div>
+        <div class="figures">
+          <div class="fig"><span class="label">Load</span><span class="value"><b id="cpu-load">–</b><i>%</i></span></div>
+          <div class="fig"><span class="label">Package</span><span class="value"><b id="cpu-temp">–</b><i class="tu">°C</i><span class="state" id="cpu-temp-state" hidden></span></span></div>
+          <div class="fig"><span class="label">Power</span><span class="value"><b id="cpu-power">–</b><i>W</i><span class="state" id="cpu-limit" hidden></span></span></div>
+          <div class="fig"><span class="label">Clock</span><span class="value"><b id="cpu-clock">–</b><i>GHz</i></span></div>
+          <div class="fig"><span class="label">Hottest core</span><span class="value"><b id="cpu-hot">–</b><i class="tu">°C</i></span></div>
+        </div>
+        <p class="note cpu-note" hidden></p>
+        <canvas class="chart tall" data-series="cpu" role="img" aria-label="Processor load over the last 2 minutes"></canvas>
+        <div class="cores" id="cores"></div>
+      </section>
+
+      <section class="card gpu gpu-card">
+        <div class="card-head"><h2><a href="#gpu">Graphics</a></h2><span class="sub" id="gpu-sub"></span></div>
+        <div class="figures">
+          <div class="fig"><span class="label">Load</span><span class="value"><b id="gpu-load">–</b><i>%</i></span></div>
+          <div class="fig"><span class="label">Temperature</span><span class="value"><b id="gpu-temp">–</b><i class="tu">°C</i><span class="state" id="gpu-temp-state" hidden></span></span></div>
+        </div>
+        <p class="note gpu-note" hidden></p>
+        <canvas class="chart" data-series="gpu" role="img" aria-label="Graphics load over the last 2 minutes"></canvas>
+        <div class="meter-row">
+          <div class="meter-label"><span>Video memory</span><span><b id="vram-used">–</b> of <span id="vram-total">–</span> GB</span></div>
+          <div class="meter" id="vram-meter" role="meter" aria-label="Video memory in use in GB" aria-valuemin="0"><i id="vram-fill"></i></div>
+        </div>
+        <dl class="stats">
+          <div><dt>Power</dt><dd><b id="gpu-power">–</b> W</dd></div>
+          <div><dt>Clock</dt><dd><b id="gpu-clock">–</b> GHz</dd></div>
+          <div><dt>Fan</dt><dd><b id="gpu-fan">–</b> %</dd></div>
+        </dl>
+      </section>
+
+      <section class="card mem">
+        <div class="card-head"><h2><a href="#memory">Memory</a></h2><span class="sub" id="mem-sub"></span></div>
+        <div class="figures">
+          <div class="fig"><span class="label">In use</span><span class="value"><b id="ram-used">–</b><i>GB</i></span></div>
+          <div class="fig"><span class="label">Available</span><span class="value"><b id="ram-free">–</b><i>GB</i></span></div>
+        </div>
+        <canvas class="chart" data-series="ram" role="img" aria-label="Memory in use over the last 2 minutes"></canvas>
+        <div class="meter-row">
+          <div class="meter-label"><span>In use</span><span><b id="ram-pct">–</b> %</span></div>
+          <div class="meter" id="ram-meter" role="meter" aria-label="Memory in use" aria-valuemin="0" aria-valuemax="100"><i id="ram-fill"></i></div>
+        </div>
+      </section>
+
+      <section class="card disks">
+        <div class="card-head"><h2><a href="#disks">Disks</a></h2><span class="sub" id="disk-sub"></span></div>
+        <div class="figures">
+          <div class="fig"><span class="label">Read</span><span class="value"><b id="disk-read">–</b><i id="disk-read-unit">B/s</i></span></div>
+          <div class="fig"><span class="label">Write</span><span class="value"><b id="disk-write">–</b><i id="disk-write-unit">B/s</i></span></div>
+        </div>
+        <canvas class="chart" data-series="disk-io" data-fmt="rate" data-max="auto" role="img" aria-label="Disk activity, read plus write, over the last 2 minutes"></canvas>
+        <div class="drive-list" id="drive-list"></div>
+      </section>
+
+      <section class="card net">
+        <div class="card-head"><h2><a href="#network">Network</a></h2><span class="sub">Physical adapters</span></div>
+        <div class="net-cols">
+          <div>
+            <div class="fig"><span class="label">Download</span><span class="value"><b id="net-down">–</b><i id="net-down-unit">KB/s</i></span></div>
+            <canvas class="chart" data-series="down" data-fmt="rate" data-max="auto" role="img" aria-label="Download rate over the last 2 minutes"></canvas>
+            <p class="total">Received <b id="net-rx">–</b> since start</p>
+          </div>
+          <div>
+            <div class="fig"><span class="label">Upload</span><span class="value"><b id="net-up">–</b><i id="net-up-unit">KB/s</i></span></div>
+            <canvas class="chart" data-series="up" data-fmt="rate" data-max="auto" role="img" aria-label="Upload rate over the last 2 minutes"></canvas>
+            <p class="total">Sent <b id="net-tx">–</b> since start</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- Processor -->
+    <section class="page detail" id="page-cpu" aria-label="Processor" hidden>
+      <section class="card span-all">
+        <div class="card-head"><h2 class="cpu-name">Processor</h2><span class="sub cpu-topo"></span></div>
+        <div class="figures">
+          <div class="fig"><span class="label">Load</span><span class="value"><b id="p-cpu-load">–</b><i>%</i></span></div>
+          <div class="fig"><span class="label">Package</span><span class="value"><b id="p-cpu-temp">–</b><i class="tu">°C</i><span class="state" id="p-cpu-temp-state" hidden></span></span></div>
+          <div class="fig"><span class="label">Power</span><span class="value"><b id="p-cpu-power">–</b><i>W</i><span class="state" id="p-cpu-limit" hidden></span></span></div>
+          <div class="fig"><span class="label">Clock</span><span class="value"><b id="p-cpu-clock">–</b><i>GHz</i></span></div>
+          <div class="fig"><span class="label">Voltage (VID)</span><span class="value"><b id="p-cpu-vid">–</b><i>V</i></span></div>
+        </div>
+        <p class="note cpu-note" hidden></p>
+      </section>
+      <section class="card"><h3>Load</h3><canvas class="chart" data-series="cpu" role="img" aria-label="Processor load"></canvas></section>
+      <section class="card"><h3>Package temperature</h3><canvas class="chart" data-series="cpu-temp" data-fmt="temp" role="img" aria-label="Package temperature"></canvas></section>
+      <section class="card"><h3>Package power</h3><canvas class="chart" data-series="cpu-power" data-fmt="watts" data-max="auto" role="img" aria-label="Package power"></canvas></section>
+      <section class="card"><h3>Average clock</h3><canvas class="chart" data-series="cpu-clock" data-fmt="ghz" data-max="cpu-max" role="img" aria-label="Average clock"></canvas></section>
+      <section class="card span-2 rows-2">
+        <h3>Cores</h3>
+        <table class="table">
+          <thead><tr><th>Core</th><th>Load</th><th class="num">Clock</th><th class="num">Temperature</th></tr></thead>
+          <tbody id="core-rows"></tbody>
+        </table>
+      </section>
+      <section class="card">
+        <h3>Specifications</h3>
+        <dl class="specs" id="cpu-specs"></dl>
+        <h3>Busiest programs</h3>
+        <table class="table"><tbody id="top-cpu"></tbody></table>
+      </section>
+    </section>
+
+    <!-- Graphics -->
+    <section class="page detail" id="page-gpu" aria-label="Graphics" hidden>
+      <section class="card span-all gpu-card">
+        <div class="card-head"><h2 class="gpu-name">Graphics</h2></div>
+        <div class="figures">
+          <div class="fig"><span class="label">Load</span><span class="value"><b id="p-gpu-load">–</b><i>%</i></span></div>
+          <div class="fig"><span class="label">Temperature</span><span class="value"><b id="p-gpu-temp">–</b><i class="tu">°C</i><span class="state" id="p-gpu-temp-state" hidden></span></span></div>
+          <div class="fig"><span class="label">Power</span><span class="value"><b id="p-gpu-power">–</b><i id="p-gpu-power-limit">W</i></span></div>
+          <div class="fig"><span class="label">Core clock</span><span class="value"><b id="p-gpu-clock">–</b><i>MHz</i></span></div>
+          <div class="fig"><span class="label">Memory clock</span><span class="value"><b id="p-gpu-mem-clock">–</b><i>MHz</i></span></div>
+          <div class="fig"><span class="label">Fan</span><span class="value"><b id="p-gpu-fan">–</b><i>%</i></span></div>
+        </div>
+        <p class="note gpu-note" hidden></p>
+      </section>
+      <section class="card"><h3>Load</h3><canvas class="chart" data-series="gpu" role="img" aria-label="Graphics load"></canvas></section>
+      <section class="card"><h3>Temperature</h3><canvas class="chart" data-series="gpu-temp" data-fmt="temp" role="img" aria-label="Graphics temperature"></canvas></section>
+      <section class="card"><h3>Power</h3><canvas class="chart" data-series="gpu-power" data-fmt="watts" data-max="gpu-power" role="img" aria-label="Graphics power"></canvas></section>
+      <section class="card"><h3>Video memory</h3><canvas class="chart" data-series="vram" data-fmt="gib" data-max="vram" role="img" aria-label="Video memory in use"></canvas></section>
+      <section class="card">
+        <h3>Right now</h3>
+        <dl class="specs" id="gpu-now"></dl>
+      </section>
+      <section class="card">
+        <h3>Specifications</h3>
+        <dl class="specs" id="gpu-specs"></dl>
+      </section>
+    </section>
+
+    <!-- Memory -->
+    <section class="page detail" id="page-memory" aria-label="Memory" hidden>
+      <section class="card span-all">
+        <div class="card-head"><h2>Memory</h2><span class="sub" id="p-mem-sub"></span></div>
+        <div class="figures">
+          <div class="fig"><span class="label">In use</span><span class="value"><b id="p-ram-used">–</b><i>GB</i></span></div>
+          <div class="fig"><span class="label">Available</span><span class="value"><b id="p-ram-free">–</b><i>GB</i></span></div>
+          <div class="fig"><span class="label">Committed</span><span class="value"><b id="p-ram-commit">–</b><i id="p-ram-commit-of">GB</i></span></div>
+          <div class="fig"><span class="label">File cache</span><span class="value"><b id="p-ram-cached">–</b><i>GB</i></span></div>
+        </div>
+      </section>
+      <section class="card span-2">
+        <h3>Where the memory goes</h3>
+        <p class="hint">Every byte of the installed memory, including what Task Manager does not show.</p>
+        <div class="usage" id="mem-usage"></div>
+      </section>
+      <section class="card">
+        <h3>Largest programs</h3>
+        <p class="hint">Private memory, as in Task Manager. Together they make the "Programs" line.</p>
+        <table class="table"><tbody id="top-ram"></tbody></table>
+      </section>
+      <section class="card span-2"><h3>In use</h3><canvas class="chart" data-series="ram" role="img" aria-label="Memory in use"></canvas></section>
+      <section class="card"><h3>Committed</h3><canvas class="chart" data-series="commit" data-fmt="gib" data-max="commit" role="img" aria-label="Committed memory"></canvas></section>
+      <section class="card span-all">
+        <h3>Installed modules</h3>
+        <table class="table">
+          <thead><tr><th>Slot</th><th>Size</th><th>Type</th><th>Speed</th><th>Maker</th><th>Part number</th></tr></thead>
+          <tbody id="modules"></tbody>
+        </table>
+      </section>
+    </section>
+
+    <!-- Disks and Network: one card per drive or adapter, built from the samples. -->
+    <section class="page detail" id="page-disks" aria-label="Disks" hidden></section>
+    <section class="page detail" id="page-network" aria-label="Network" hidden></section>
+
+    <!-- Settings -->
+    <section class="page settings" id="page-settings" aria-label="Settings" hidden>
+      <section class="card">
+        <h2>General</h2>
+        <label class="row"><span><b>Start with Windows</b><small id="autostart-note">Opens Corelume in the tray when you sign in.</small></span>
+          <input type="checkbox" class="switch" id="set-autostart"></label>
+        <div class="row"><span><b>Theme</b></span>
+          <span class="segmented" role="radiogroup" aria-label="Theme">
+            <label><input type="radio" name="theme" value="system"><span>System</span></label>
+            <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+            <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+          </span></div>
+        <div class="row"><span><b>Temperature unit</b></span>
+          <span class="segmented" role="radiogroup" aria-label="Temperature unit">
+            <label><input type="radio" name="unit" value="C"><span>°C</span></label>
+            <label><input type="radio" name="unit" value="F"><span>°F</span></label>
+          </span></div>
+      </section>
+      <section class="card">
+        <h2>Desktop widgets</h2>
+        <p class="hint">Small panels pinned to the desktop, under your windows. Click one to open its page.</p>
+        <label class="row"><span><b>Processor</b></span><input type="checkbox" class="switch" data-widget="cpu"></label>
+        <label class="row"><span><b>Graphics</b></span><input type="checkbox" class="switch" data-widget="gpu"></label>
+        <label class="row"><span><b>Memory</b></span><input type="checkbox" class="switch" data-widget="memory"></label>
+        <label class="row"><span><b>Disks</b></span><input type="checkbox" class="switch" data-widget="disks"></label>
+        <label class="row"><span><b>Network</b></span><input type="checkbox" class="switch" data-widget="network"></label>
+        <label class="row"><span><b>Screen</b></span><select id="set-screen" aria-label="Screen for the widgets"></select></label>
+        <div class="row"><span><b>Position</b><small>Where they sit on that screen. They line up with the edges
+          of the chosen spot and spill toward the middle when they need more room.</small></span>
+          <div class="screen-grid" id="pos-grid" role="radiogroup" aria-label="Widget position on the screen"></div></div>
+        <div class="row"><span><b>Arrangement</b></span>
+          <span class="segmented" role="radiogroup" aria-label="Widget arrangement">
+            <label><input type="radio" name="layout" value="column"><span>Column</span></label>
+            <label><input type="radio" name="layout" value="row"><span>Row</span></label>
+            <label><input type="radio" name="layout" value="grid2"><span>2 per row</span></label>
+            <label><input type="radio" name="layout" value="grid3"><span>3 per row</span></label>
+          </span></div>
+        <div class="row" id="align-row"><span><b>Short last row</b><small>When the last row is not full, line it up
+          under the left or the right columns.</small></span>
+          <span class="segmented" role="radiogroup" aria-label="Short last row">
+            <label><input type="radio" name="align" value="left"><span>Left</span></label>
+            <label><input type="radio" name="align" value="right"><span>Right</span></label>
+          </span></div>
+      </section>
+      <section class="card">
+        <h2>About</h2>
+        <dl class="specs" id="about"></dl>
+      </section>
+    </section>
+  </main>
+
+  <div class="tip" id="tip" role="status" hidden></div>
+</body>
+</html>
